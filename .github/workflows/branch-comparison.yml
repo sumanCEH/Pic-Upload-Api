@@ -1,3 +1,13 @@
+# GitHub Branch Comparison Agent - Production Grade
+# 
+# This workflow compares two branches and generates comprehensive reports.
+# It uses industry-standard practices with latest action versions.
+#
+# Maintenance Notes:
+# - Actions are pinned to specific versions for reproducibility
+# - Configured for Node.js 24 compliance
+# - Runs on latest Ubuntu LTS for security
+
 name: Branch Comparison Agent
 
 on:
@@ -15,6 +25,11 @@ on:
 jobs:
   compare_branches:
     runs-on: ubuntu-latest
+    # Opt into Node.js 24 to ensure compatibility with GitHub Actions deprecation timeline
+    # Node.js 20 will be removed on September 16, 2026
+    # Reference: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     
     steps:
       - name: Checkout Repository
