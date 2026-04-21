@@ -18,42 +18,40 @@ jobs:
     
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.1.7
         with:
           fetch-depth: 0
       
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5.1.1
         with:
           python-version: '3.11'
       
       - name: Run Branch Comparison
         run: |
-          cd PictureUpload
-          python scripts/branch_comparison_agent.py . ${{ inputs.branch1 }} ${{ inputs.branch2 }}
+          python PictureUpload/scripts/branch_comparison_agent.py . ${{ inputs.branch1 }} ${{ inputs.branch2 }}
       
       - name: Display Comparison Report
         if: always()
         run: |
           echo "=== Latest Comparison Report ==="
-          if [ -f "PictureUpload/reports/latest_comparison.md" ]; then
-            cat PictureUpload/reports/latest_comparison.md
+          if [ -f "reports/latest_comparison.md" ]; then
+            cat reports/latest_comparison.md
           else
             echo "No comparison report generated"
           fi
       
       - name: Upload Reports as Artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.0
         with:
           name: comparison-reports
-          path: PictureUpload/reports/
+          path: reports/
           retention-days: 30
       
       - name: Commit Reports (Optional)
         if: always()
         run: |
-          cd PictureUpload
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
@@ -69,7 +67,6 @@ jobs:
       - name: Create Issue Summary (Optional)
         if: always()
         run: |
-          cd PictureUpload
           if [ -f "reports/latest_comparison.json" ]; then
             echo "Comparison complete. Report available in artifacts."
           fi
