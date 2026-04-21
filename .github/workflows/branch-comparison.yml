@@ -1,0 +1,76 @@
+name: Branch Comparison Agent
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch1:
+        description: 'First branch (typically production)'
+        required: false
+        default: 'main'
+      branch2:
+        description: 'Second branch (typically development)'
+        required: false
+        default: 'QA1'
+
+jobs:
+  compare_branches:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Run Branch Comparison
+        run: |
+          cd PictureUpload
+          python scripts/branch_comparison_agent.py . ${{ inputs.branch1 }} ${{ inputs.branch2 }}
+      
+      - name: Display Comparison Report
+        if: always()
+        run: |
+          echo "=== Latest Comparison Report ==="
+          if [ -f "PictureUpload/reports/latest_comparison.md" ]; then
+            cat PictureUpload/reports/latest_comparison.md
+          else
+            echo "No comparison report generated"
+          fi
+      
+      - name: Upload Reports as Artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: comparison-reports
+          path: PictureUpload/reports/
+          retention-days: 30
+      
+      - name: Commit Reports (Optional)
+        if: always()
+        run: |
+          cd PictureUpload
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          if git diff --quiet reports/latest_comparison.md; then
+            echo "No changes in reports"
+          else
+            git add reports/
+            git commit -m "docs: update branch comparison report [skip ci]" || echo "No changes to commit"
+            git push || echo "Could not push (might lack permissions in this workflow)"
+          fi
+        continue-on-error: true
+      
+      - name: Create Issue Summary (Optional)
+        if: always()
+        run: |
+          cd PictureUpload
+          if [ -f "reports/latest_comparison.json" ]; then
+            echo "Comparison complete. Report available in artifacts."
+          fi
+

@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-04-21T21:44:00.991865",
+  "comparison": {
+    "branch1": "main",
+    "branch2": "QA1"
+  },
+  "summary": {
+    "total_files_branch1": 30,
+    "total_files_branch2": 28,
+    "common_files": 28,
+    "missing_in_branch2": 2,
+    "additional_in_branch2": 0,
+    "modified_files": 1
+  },
+  "details": {
+    "missing_in_branch2": [
+      ".github/workflows/branch-compare.yml",
+      "compare.py"
+    ],
+    "additional_in_branch2": [],
+    "modified_files": [
+      "PictureUpload/src/main/java/com/suman/entity/Image.java"
+    ]
+  }
+}
