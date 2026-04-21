@@ -15,6 +15,7 @@ public class Image {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
+	//test
 	
 	@Lob
 	private byte[] image;
@@ -40,9 +41,11 @@ public class Image {
 	}
 	public byte[] getImage() {
 		return image;
+		//test
 	}
 	public void setImage(byte[] image) {
 		this.image = image;
+		//test
 	}
 
 
