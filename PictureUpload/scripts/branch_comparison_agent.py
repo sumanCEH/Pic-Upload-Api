@@ -111,58 +111,120 @@ class BranchComparisonAgent:
         }
     
     def generate_markdown_report(self, comparison_data: Dict) -> str:
-        """Generate a comprehensive Markdown report."""
+        """Generate a comprehensive, easy-to-understand Markdown report."""
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         report = []
         
-        report.append("# GitHub Branch Comparison Report\n")
-        report.append(f"**Generated**: {timestamp}\n")
-        report.append(f"**Comparison**: `{self.branch1}` <-> `{self.branch2}`\n")
-        report.append("---\n")
+        # Header
+        report.append("# BRANCH COMPARISON REPORT\n\n")
+        report.append(f"Generated: {timestamp}\n")
+        report.append(f"Comparing: [{self.branch1}] vs [{self.branch2}]\n")
+        report.append("\n" + "="*80 + "\n\n")
         
-        # Summary Section
-        report.append("## Summary\n")
-        report.append("| Metric | Count |\n")
-        report.append("|--------|-------|\n")
-        report.append(f"| Files in {self.branch1} | {comparison_data['total_files_branch1']} |\n")
-        report.append(f"| Files in {self.branch2} | {comparison_data['total_files_branch2']} |\n")
-        report.append(f"| Common Files | {comparison_data['common_files_count']} |\n")
-        report.append(f"| Missing in {self.branch2} | {len(comparison_data['missing_in_branch2'])} |\n")
-        report.append(f"| Additional in {self.branch2} | {len(comparison_data['additional_in_branch2'])} |\n")
-        report.append(f"| Modified Files | {comparison_data['modified_count']} |\n\n")
+        # Quick Summary Box
+        report.append("QUICK SUMMARY\n")
+        report.append("-" * 80 + "\n")
+        report.append(f"Total Files in {self.branch1}: {comparison_data['total_files_branch1']}\n")
+        report.append(f"Total Files in {self.branch2}: {comparison_data['total_files_branch2']}\n")
+        report.append(f"Common Files: {comparison_data['common_files_count']}\n")
+        report.append(f"Missing in {self.branch2}: {len(comparison_data['missing_in_branch2'])} file(s)\n")
+        report.append(f"New in {self.branch2}: {len(comparison_data['additional_in_branch2'])} file(s)\n")
+        report.append(f"Modified Files: {comparison_data['modified_count']} file(s)\n")
+        report.append("-" * 80 + "\n\n")
+        
+        # Status Indicators
+        report.append("STATUS OVERVIEW\n")
+        report.append("-" * 80 + "\n")
+        
+        if comparison_data['missing_in_branch2']:
+            report.append(f"[!] IMPORTANT: {len(comparison_data['missing_in_branch2'])} file(s) are missing from {self.branch2}\n")
+            report.append(f"    These files exist in {self.branch1} but NOT in {self.branch2}\n\n")
+        else:
+            report.append(f"[OK] {self.branch2} contains all files from {self.branch1}\n\n")
+        
+        if comparison_data['additional_in_branch2']:
+            report.append(f"[*] {self.branch2} has {len(comparison_data['additional_in_branch2'])} new file(s)\n")
+            report.append(f"    These files are in {self.branch2} but NOT in {self.branch1}\n\n")
+        else:
+            report.append(f"[OK] No new files in {self.branch2}\n\n")
+        
+        if comparison_data['modified_count']:
+            report.append(f"[~] {comparison_data['modified_count']} file(s) have code changes\n")
+            report.append(f"    These files exist in both branches but with different content\n\n")
+        else:
+            report.append(f"[OK] No code changes in common files\n\n")
+        
+        report.append("\n" + "="*80 + "\n\n")
         
         # Files Missing in Branch 2
         if comparison_data['missing_in_branch2']:
-            report.append(f"## Files Missing in `{self.branch2}` (Present in `{self.branch1}`)\n")
-            report.append(f"*Total: {len(comparison_data['missing_in_branch2'])} file(s)*\n\n")
-            for file_path in comparison_data['missing_in_branch2']:
-                report.append(f"- `{file_path}`\n")
+            report.append("FILES MISSING FROM " + self.branch2.upper() + "\n")
+            report.append("-" * 80 + "\n")
+            report.append(f"Total: {len(comparison_data['missing_in_branch2'])} file(s)\n")
+            report.append(f"Action: These files need to be added to {self.branch2}\n\n")
+            
+            for i, file_path in enumerate(comparison_data['missing_in_branch2'], 1):
+                report.append(f"  {i}. {file_path}\n")
             report.append("\n")
         
         # Files Additional in Branch 2
         if comparison_data['additional_in_branch2']:
-            report.append(f"## Files Additional in `{self.branch2}` (Not in `{self.branch1}`)\n")
-            report.append(f"*Total: {len(comparison_data['additional_in_branch2'])} file(s)*\n\n")
-            for file_path in comparison_data['additional_in_branch2']:
-                report.append(f"- `{file_path}`\n")
+            report.append("NEW FILES IN " + self.branch2.upper() + "\n")
+            report.append("-" * 80 + "\n")
+            report.append(f"Total: {len(comparison_data['additional_in_branch2'])} file(s)\n")
+            report.append(f"Status: These are new files added to {self.branch2}\n\n")
+            
+            for i, file_path in enumerate(comparison_data['additional_in_branch2'], 1):
+                report.append(f"  {i}. {file_path}\n")
             report.append("\n")
         
-        # Modified Files
+        # Modified Files with detailed diffs
         if comparison_data['modified_files']:
-            report.append(f"## Modified Files (Differences Between Branches)\n")
-            report.append(f"*Total: {comparison_data['modified_count']} file(s)*\n\n")
+            report.append("MODIFIED FILES (CODE CHANGES)\n")
+            report.append("-" * 80 + "\n")
+            report.append(f"Total: {comparison_data['modified_count']} file(s)\n\n")
             
             for idx, (file_path, diff_content) in enumerate(comparison_data['modified_files'].items(), 1):
-                report.append(f"### {idx}. `{file_path}`\n\n")
-                report.append("```diff\n")
-                report.append(diff_content[:2000])  # Limit diff output to first 2000 chars
-                if len(diff_content) > 2000:
-                    report.append("\n... (truncated, full diff available via git)\n")
-                report.append("```\n\n")
+                report.append(f"\n{idx}. {file_path}\n")
+                report.append("   " + "-" * 76 + "\n")
+                
+                # Count added/removed lines
+                added_lines = diff_content.count('\n+') - 1
+                removed_lines = diff_content.count('\n-') - 1
+                
+                report.append(f"   Changes: {removed_lines} lines removed, {added_lines} lines added\n\n")
+                report.append("   " + "=" * 76 + "\n")
+                report.append("   DETAILED DIFF:\n")
+                report.append("   " + "=" * 76 + "\n\n")
+                
+                # Limit diff output
+                diff_lines = diff_content.split('\n')[:30]  # First 30 lines
+                for line in diff_lines:
+                    report.append(f"   {line}\n")
+                
+                if len(diff_content.split('\n')) > 30:
+                    report.append("\n   [... truncated ...]\n")
+                    report.append(f"   Full diff: git diff {self.branch1}..{self.branch2} -- {file_path}\n")
+                
+                report.append("\n")
         
-        # Footer
-        report.append("---\n")
-        report.append(f"*Report generated by GitHub Branch Comparison Agent*\n")
+        # Footer with actionable info
+        report.append("\n" + "="*80 + "\n\n")
+        report.append("RECOMMENDED ACTIONS\n")
+        report.append("-" * 80 + "\n")
+        
+        if comparison_data['missing_in_branch2']:
+            report.append(f"1. Review and merge {len(comparison_data['missing_in_branch2'])} missing file(s) from {self.branch1}\n")
+        
+        if comparison_data['modified_count']:
+            report.append(f"2. Review code changes in {comparison_data['modified_count']} modified file(s)\n")
+        
+        if comparison_data['additional_in_branch2']:
+            report.append(f"3. Evaluate {len(comparison_data['additional_in_branch2'])} new file(s) in {self.branch2}\n")
+        
+        report.append("\n")
+        report.append("="*80 + "\n")
+        report.append("Report generated by Branch Comparison Agent\n")
         
         return "".join(report)
     
